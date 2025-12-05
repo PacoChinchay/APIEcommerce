@@ -28,5 +28,57 @@ namespace APIEcommerce.Controllers
             var usersDto = _mapper.Map<List<UserDto>>(users);
             return Ok(usersDto);
         }
+
+        [HttpGet("{id:int}", Name = "GetUser")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult GetUser(int id)
+        {
+            if (id <= 0)
+            {
+                ModelState.AddModelError("CustomError", "El id ingresado es invalido");
+                return BadRequest(ModelState);
+            }
+
+            var user = _userRepository.GetUser(id);
+            if (user == null)
+            {
+                return NotFound($"No se encuentra el usuario con id {id}");
+            }
+            var userDto = _mapper.Map<UserDto>(user);
+            return Ok(userDto);
+        }
+
+        [HttpPost(Name = "RegisterUser")]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> RegRegisterUseri([FromBody] CreateUserDto createUserDto)
+        {
+            if (createUserDto == null || !ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (string.IsNullOrWhiteSpace(createUserDto.Username))
+            {
+                return BadRequest("El nombre de usuario es obligatorio.");
+            }
+
+            if (!_userRepository.IsUniqueUser(createUserDto.Username))
+            {
+                return BadRequest("El nombre de usuario ya existe.");
+            }
+
+            var result = await _userRepository.Register(createUserDto);
+            if (result == null)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error al registra el usuario");
+            }
+            return CreatedAtRoute("GetUser", new {id = result.Id }, result);
+        }
     }
 }
