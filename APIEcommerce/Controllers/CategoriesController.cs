@@ -1,8 +1,10 @@
-﻿using APIEcommerce.Models;
+﻿using APIEcommerce.Constants;
+using APIEcommerce.Models;
 using APIEcommerce.Models.Dtos;
 using APIEcommerce.Repository;
 using APIEcommerce.Repository.IRepository;
 using AutoMapper;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,6 +12,7 @@ namespace APIEcommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    //[EnableCors(PolicyNames.AllowSpecificOrigin)]
     public class CategoriesController : ControllerBase
     {
         private readonly ICategoryRepository _categoryRepository;
@@ -24,6 +27,7 @@ namespace APIEcommerce.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        //[EnableCors(PolicyNames.AllowSpecificOrigin)]
         public IActionResult GetCategories()
         {
             var categories = _categoryRepository.GetCategories();

@@ -1,3 +1,4 @@
+using APIEcommerce.Constants;
 using APIEcommerce.Data;
 using APIEcommerce.Repository;
 using APIEcommerce.Repository.IRepository;
@@ -15,7 +16,7 @@ builder.Services.AddSwaggerGen();
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin", builder =>
+    options.AddPolicy(PolicyNames.AllowSpecificOrigin, builder =>
     {
         builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
     });
@@ -42,7 +43,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowSpecificOrigin");
+app.UseCors(PolicyNames.AllowSpecificOrigin);
 
 app.UseAuthorization();
 
