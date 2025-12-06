@@ -2,6 +2,7 @@ using APIEcommerce.Constants;
 using APIEcommerce.Data;
 using APIEcommerce.Repository;
 using APIEcommerce.Repository.IRepository;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -66,6 +67,24 @@ builder.Services.AddResponseCaching(options =>
 {
     options.MaximumBodySize = 1024 * 1024;
     options.UseCaseSensitivePaths = true;
+});
+#endregion
+
+#region Versioning
+var apiVersionnigBuilder = builder.Services.AddApiVersioning(option =>
+{
+    option.AssumeDefaultVersionWhenUnspecified = true;
+    option.DefaultApiVersion = new ApiVersion(1,0);
+    option.ReportApiVersions = true;
+    option.ApiVersionReader = ApiVersionReader.Combine(
+        new QueryStringApiVersionReader("api-version")
+        );
+});
+
+apiVersionnigBuilder.AddApiExplorer(option =>
+{
+    option.GroupNameFormat = "'v'VVV";
+    option.SubstituteApiVersionInUrl = true;
 });
 #endregion
 
