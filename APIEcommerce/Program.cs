@@ -71,6 +71,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(PolicyNames.AllowSpecificOrigin);
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();

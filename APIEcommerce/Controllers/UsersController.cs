@@ -1,6 +1,7 @@
 ﻿using APIEcommerce.Models.Dtos;
 using APIEcommerce.Repository.IRepository;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +9,7 @@ namespace APIEcommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
@@ -51,6 +53,7 @@ namespace APIEcommerce.Controllers
             return Ok(userDto);
         }
 
+        [AllowAnonymous]
         [HttpPost(Name = "RegisterUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -81,12 +84,12 @@ namespace APIEcommerce.Controllers
             return CreatedAtRoute("GetUser", new {id = result.Id }, result);
         }
 
+        [AllowAnonymous]
         [HttpPost("Login",Name = "LoginUser")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-
         public async Task<IActionResult> LoginUser([FromBody] UserLoginDto userLoginDto)
         {
             if (userLoginDto == null || !ModelState.IsValid)

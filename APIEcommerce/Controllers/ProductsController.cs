@@ -2,6 +2,7 @@
 using APIEcommerce.Models.Dtos;
 using APIEcommerce.Repository.IRepository;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,6 +10,7 @@ namespace APIEcommerce.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class ProductsController : ControllerBase
     {
         private readonly IProductRepository _productRepository;
@@ -22,6 +24,7 @@ namespace APIEcommerce.Controllers
             _mapper = mapper;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -32,6 +35,7 @@ namespace APIEcommerce.Controllers
             return Ok(productsDto);
         }
 
+        [AllowAnonymous]
         [HttpGet("{productId:int}", Name = "GetProduct")]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
