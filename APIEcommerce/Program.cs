@@ -3,41 +3,95 @@ using APIEcommerce.Data;
 using APIEcommerce.Repository;
 using APIEcommerce.Repository.IRepository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-// Add CORS
-builder.Services.AddCors(options =>
+#region Controllers & Cache Profiles
+builder.Services.AddControllers(options =>
 {
-    options.AddPolicy(PolicyNames.AllowSpecificOrigin, builder =>
+    options.CacheProfiles.Add(CacheProfiles.default10, CacheProfiles.Profile10);
+
+    options.CacheProfiles.Add(CacheProfiles.default20, CacheProfiles.Profile20);
+});
+#endregion
+
+#region Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        builder.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+        Description =
+            "Nuestra API utiliza autenticación JWT (Bearer).\n\n" +
+            "Ingresa el token generado en el login.\n\n" +
+            "Ejemplo: \"12345abcdef\"",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new List<string>()
+        }
     });
 });
+#endregion
 
-// Dependency Injection
+#region Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+#endregion
 
-// repository injection
+#region Response Caching
+builder.Services.AddResponseCaching(options =>
+{
+    options.MaximumBodySize = 1024 * 1024;
+    options.UseCaseSensitivePaths = true;
+});
+#endregion
+
+#region CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(PolicyNames.AllowSpecificOrigin, policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+#endregion
+
+#region Dependency Injection
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddAutoMapper(typeof(Program).Assembly);
 
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+#endregion
+
+#region Authentication - JWT
 var secretKey = builder.Configuration.GetValue<string>("ApiSettings:SecretKey");
+
 if (string.IsNullOrEmpty(secretKey))
 {
     throw new InvalidOperationException("SecretKey no está configurada");
@@ -47,22 +101,25 @@ builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
-    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(secretKey)),
         ValidateIssuer = false,
-        ValidateAudience = true,
+        ValidateAudience = false
     };
 });
+#endregion
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+#region HTTP Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -71,10 +128,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(PolicyNames.AllowSpecificOrigin);
 
-app.UseAuthentication();
+app.UseResponseCaching();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+#endregion
 
 app.Run();
