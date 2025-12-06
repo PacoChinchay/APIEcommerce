@@ -68,6 +68,24 @@ builder.Services.AddSwaggerGen(options =>
             Url = new Uri("https://example.com/license")
         }
     });
+
+    options.SwaggerDoc("v2", new OpenApiInfo
+    {
+        Version = "v2",
+        Title = "API Ecommerce v2",
+        Description = "API para un sistema de ecommerce v2",
+        TermsOfService = new Uri("https://example.com/terms"),
+        Contact = new OpenApiContact
+        {
+            Name = "Pacodev",
+            Url = new Uri("https://devtalles.com")
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Lisencia de uso",
+            Url = new Uri("https://example.com/license")
+        }
+    });
 });
 #endregion
 
@@ -160,6 +178,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
     });
 }
 
