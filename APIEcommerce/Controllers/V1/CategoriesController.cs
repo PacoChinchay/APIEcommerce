@@ -10,11 +10,10 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace APIEcommerce.Controllers
+namespace APIEcommerce.Controllers.V1
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
-    [ApiVersion("2.0")]
     [ApiController]
     //[EnableCors(PolicyNames.AllowSpecificOrigin)]
     [Authorize(Roles = "Admin")]
@@ -33,30 +32,11 @@ namespace APIEcommerce.Controllers
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [MapToApiVersion("1.0")]
+        [Obsolete("Esta versión del endpoint está obsoleta. Use la versión 2.0 o superior.")]
         //[EnableCors(PolicyNames.AllowSpecificOrigin)]
         public IActionResult GetCategories()
         {
             var categories = _categoryRepository.GetCategories();
-            var categoriesDto = new List<CategoryDto>();
-
-            foreach (var category in categories)
-            {
-                categoriesDto.Add(_mapper.Map<CategoryDto>(category));
-            }
-
-            return Ok(categoriesDto);
-        }
-
-        [AllowAnonymous]
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [MapToApiVersion("2.0")]
-        //[EnableCors(PolicyNames.AllowSpecificOrigin)]
-        public IActionResult GetCategoriesOrderById()
-        {
-            var categories = _categoryRepository.GetCategories().OrderBy(cat => cat.Id);
             var categoriesDto = new List<CategoryDto>();
 
             foreach (var category in categories)
